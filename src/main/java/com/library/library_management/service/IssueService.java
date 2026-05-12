@@ -29,6 +29,16 @@ public class IssueService {
         return issueRepository.findAll();
     }
 
+    public List<IssueRecord> getIssuesByMember(Long memberId) {
+        Member member = memberRepository.findById(memberId).orElse(null);
+
+        if (member == null) {
+            return null;
+        }
+
+        return issueRepository.findByMemberAndReturnDateIsNull(member);
+    }
+
     public IssueRecord issueBook(Long bookId, Long memberId) {
 
         Book book = bookRepository.findById(bookId).orElse(null);
