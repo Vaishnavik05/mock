@@ -1,40 +1,82 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import api from '../services/api';
 import '../styles/Pages.css';
 
-function ReturnBooks() {
-  const [returns, setReturns] = useState([
-    { id: 1, issueId: 1, bookTitle: 'The Great Gatsby', memberName: 'John Doe', returnDate: '2024-05-25', fine: 0 },
-  ]);
+function ReturnBooks({ currentUser }) {
+  const [returns, setReturns] = useState([]);
 
   const [showForm, setShowForm] = useState(false);
   const [issueId, setIssueId] = useState('');
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  const handleReturnBook = (e) => {
+  const isLibrarian = currentUser?.role === 'LIBRARIAN';
+
+  const loadReturns = useCallback(async () => {
+    setLoading(true);
+    try {
+      if (isLibrarian) {
+        const { data } = await api.get('/issues');
+        setReturns(data);
+      } else if (currentUser?.memberId) {
+        const { data } = await api.get(`/members/${currentUser.memberId}/issues`);
+        setReturns(data);
+      } else {
+        setReturns([]);
+      }
+    } catch (error) {
+      setMessage(error?.response?.data?.error || 'Unable to load return data');
+    } finally {
+      setLoading(false);
+    }
+  }, [currentUser?.memberId, isLibrarian]);
+
+  useEffect(() => {
+    loadReturns();
+  }, [loadReturns]);
+
+  const handleReturnBook = async (e) => {
     e.preventDefault();
     if (issueId) {
-      setReturns([...returns, {
-        id: Math.max(...returns.map(r => r.id), 0) + 1,
-        issueId: parseInt(issueId),
-        bookTitle: 'Returned Book',
-        memberName: 'Member',
-        returnDate: new Date().toISOString().split('T')[0],
-        fine: 0,
-      }]);
-      setIssueId('');
-      setShowForm(false);
+      try {
+        await api.put(`/issues/return/${issueId}`);
+        setMessage('Book returned successfully');
+        setIssueId('');
+        setShowForm(false);
+        loadReturns();
+      } catch (error) {
+        setMessage(error?.response?.data?.error || 'Unable to return book');
+      }
+    }
+  };
+
+  const handleQuickReturn = async (selectedIssueId) => {
+    try {
+      await api.put(`/issues/return/${selectedIssueId}`);
+      setMessage('Book returned successfully');
+      loadReturns();
+    } catch (error) {
+      setMessage(error?.response?.data?.error || 'Unable to return book');
     }
   };
 
   return (
     <div className="page-container">
       <div className="page-header-top">
-        <h1>Return Books</h1>
-        <button className="btn-add" onClick={() => setShowForm(!showForm)}>
-          {showForm ? 'Cancel' : 'Return Book'}
-        </button>
+        <div>
+          <h1>{isLibrarian ? 'Return Books' : 'My Active Issues'}</h1>
+          <p className="page-helper">Close out issued books so the catalog becomes available again.</p>
+        </div>
+        {isLibrarian && (
+          <button className="btn-add" onClick={() => setShowForm(!showForm)}>
+            {showForm ? 'Cancel' : 'Return Book'}
+          </button>
+        )}
       </div>
 
-      {showForm && (
+      {message && <div className="status-banner">{message}</div>}
+
+      {showForm && isLibrarian && (
         <div className="form-card">
           <form onSubmit={handleReturnBook}>
             <div className="form-group">
@@ -56,28 +98,36 @@ function ReturnBooks() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>Return ID</th>
-              <th>Issue ID</th>
+              {isLibrarian && <th>Issue ID</th>}
               <th>Book</th>
               <th>Member</th>
+              <th>Issue Date</th>
               <th>Return Date</th>
-              <th>Fine</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
-            {returns.length > 0 ? (
+            {!loading && returns.length > 0 ? (
               returns.map((ret) => (
-                <tr key={ret.id}>
-                  <td>#{ret.id}</td>
-                  <td>#{ret.issueId}</td>
-                  <td>{ret.bookTitle}</td>
-                  <td>{ret.memberName}</td>
-                  <td>{ret.returnDate}</td>
-                  <td className={ret.fine > 0 ? 'fine' : ''}>₹{ret.fine}</td>
+                <tr key={ret.issueId}>
+                  {isLibrarian && <td>#{ret.issueId}</td>}
+                  <td>{ret.book?.title}</td>
+                  <td>{ret.member?.name}</td>
+                  <td>{ret.issueDate}</td>
+                  <td>{ret.returnDate || 'Active'}</td>
+                  <td>
+                    {!ret.returnDate && (
+                      <button className="btn-action" onClick={() => handleQuickReturn(ret.issueId)}>
+                        Return
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))
+            ) : loading ? (
+              <tr><td colSpan={isLibrarian ? 6 : 5} className="no-data">Loading returns...</td></tr>
             ) : (
-              <tr><td colSpan="6" className="no-data">No returns found</td></tr>
+              <tr><td colSpan={isLibrarian ? 6 : 5} className="no-data">No active issues found</td></tr>
             )}
           </tbody>
         </table>

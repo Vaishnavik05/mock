@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import api from '../services/api';
 import '../styles/Auth.css';
 
 function Signup({ onSignupSuccess, onToggleMode }) {
@@ -8,6 +9,7 @@ function Signup({ onSignupSuccess, onToggleMode }) {
     password: '',
     confirmPassword: '',
     phone: '',
+    role: 'MEMBER',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -45,27 +47,17 @@ function Signup({ onSignupSuccess, onToggleMode }) {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8080/api/auth/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-          phone: formData.phone,
-        }),
+      const { data } = await api.post('/api/auth/signup', {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        phone: formData.phone,
+        role: formData.role,
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        onSignupSuccess(data.user || { name: formData.name, email: formData.email });
-      } else {
-        setError('Signup failed');
-      }
+      onSignupSuccess(data);
     } catch (err) {
-      onSignupSuccess({ name: formData.name, email: formData.email, id: Date.now() });
+      setError(err?.response?.data?.message || err?.response?.data?.error || 'Signup failed');
     }
     setLoading(false);
   };
@@ -75,6 +67,7 @@ function Signup({ onSignupSuccess, onToggleMode }) {
       <div className="auth-container">
         <div className="auth-box">
           <h1 className="auth-title">Library Management</h1>
+          <p className="auth-subtitle">Create a member or librarian account.</p>
 
           <form onSubmit={handleSubmit} className="auth-form">
             <h2 className="form-title">Create Account</h2>
@@ -115,6 +108,19 @@ function Signup({ onSignupSuccess, onToggleMode }) {
                 onChange={handleChange}
                 disabled={loading}
               />
+            </div>
+
+            <div className="form-group">
+              <label>Account Type</label>
+              <select
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                disabled={loading}
+              >
+                <option value="MEMBER">Member</option>
+                <option value="LIBRARIAN">Librarian</option>
+              </select>
             </div>
 
             <div className="form-group">

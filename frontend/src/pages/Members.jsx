@@ -1,25 +1,44 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import api from '../services/api';
 import '../styles/Pages.css';
 
 function Members() {
-  const [members, setMembers] = useState([
-    { id: 1, name: 'John Doe', email: 'john@example.com', phone: '9876543210' },
-    { id: 2, name: 'Jane Smith', email: 'jane@example.com', phone: '9123456789' },
-  ]);
+  const [members, setMembers] = useState([]);
 
   const [showForm, setShowForm] = useState(false);
   const [newMember, setNewMember] = useState({ name: '', email: '', phone: '' });
   const [searchTerm, setSearchTerm] = useState('');
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  const handleAddMember = (e) => {
+  useEffect(() => {
+    loadMembers();
+  }, []);
+
+  const loadMembers = async () => {
+    setLoading(true);
+    try {
+      const { data } = await api.get('/members');
+      setMembers(data);
+    } catch (error) {
+      setMessage(error?.response?.data?.error || 'Unable to load members');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddMember = async (e) => {
     e.preventDefault();
     if (newMember.name && newMember.email && newMember.phone) {
-      setMembers([...members, {
-        id: Math.max(...members.map(m => m.id), 0) + 1,
-        ...newMember,
-      }]);
-      setNewMember({ name: '', email: '', phone: '' });
-      setShowForm(false);
+      try {
+        await api.post('/members', newMember);
+        setMessage('Member added successfully');
+        setNewMember({ name: '', email: '', phone: '' });
+        setShowForm(false);
+        loadMembers();
+      } catch (error) {
+        setMessage(error?.response?.status === 409 ? 'Member already exists' : error?.response?.data?.error || 'Unable to add member');
+      }
     }
   };
 
@@ -31,11 +50,16 @@ function Members() {
   return (
     <div className="page-container">
       <div className="page-header-top">
-        <h1>Members</h1>
+        <div>
+          <h1>Members</h1>
+          <p className="page-helper">Register library members and keep their contact details up to date.</p>
+        </div>
         <button className="btn-add" onClick={() => setShowForm(!showForm)}>
           {showForm ? 'Cancel' : 'Add Member'}
         </button>
       </div>
+
+      {message && <div className="status-banner">{message}</div>}
 
       {showForm && (
         <div className="form-card">
@@ -96,19 +120,30 @@ function Members() {
             </tr>
           </thead>
           <tbody>
-            {filteredMembers.length > 0 ? (
+            {!loading && filteredMembers.length > 0 ? (
               filteredMembers.map((member) => (
-                <tr key={member.id}>
-                  <td>#{member.id}</td>
+                <tr key={member.memberId}>
+                  <td>#{member.memberId}</td>
                   <td>{member.name}</td>
                   <td>{member.email}</td>
                   <td>{member.phone}</td>
                   <td className="actions">
-                    <button className="btn-action">Edit</button>
-                    <button className="btn-action delete">Delete</button>
+                    <button className="btn-action delete" onClick={async () => {
+                      try {
+                        await api.delete(`/members/${member.memberId}`);
+                        setMessage('Member deleted successfully');
+                        loadMembers();
+                      } catch (error) {
+                        setMessage(error?.response?.data?.error || 'Unable to delete member');
+                      }
+                    }}>
+                      Delete
+                    </button>
                   </td>
                 </tr>
               ))
+            ) : loading ? (
+              <tr><td colSpan="5" className="no-data">Loading members...</td></tr>
             ) : (
               <tr><td colSpan="5" className="no-data">No members found</td></tr>
             )}

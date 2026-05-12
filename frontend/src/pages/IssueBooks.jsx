@@ -1,37 +1,79 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import api from '../services/api';
 import '../styles/Pages.css';
 
 function IssueBooks() {
-  const [issues, setIssues] = useState([
-    { id: 1, bookTitle: 'The Great Gatsby', memberName: 'John Doe', issueDate: '2024-05-01', dueDate: '2024-06-01' },
-  ]);
+  const [issues, setIssues] = useState([]);
+  const [books, setBooks] = useState([]);
+  const [members, setMembers] = useState([]);
 
   const [showForm, setShowForm] = useState(false);
   const [newIssue, setNewIssue] = useState({ bookId: '', memberId: '' });
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  const handleIssueBook = (e) => {
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [issuesResponse, booksResponse, membersResponse] = await Promise.all([
+        api.get('/issues'),
+        api.get('/books/available'),
+        api.get('/members'),
+      ]);
+      setIssues(issuesResponse.data);
+      setBooks(booksResponse.data);
+      setMembers(membersResponse.data);
+    } catch (error) {
+      setMessage(error?.response?.data?.error || 'Unable to load issue data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleIssueBook = async (e) => {
     e.preventDefault();
     if (newIssue.bookId && newIssue.memberId) {
-      setIssues([...issues, {
-        id: Math.max(...issues.map(i => i.id), 0) + 1,
-        bookTitle: 'Selected Book',
-        memberName: 'Selected Member',
-        issueDate: new Date().toISOString().split('T')[0],
-        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      }]);
-      setNewIssue({ bookId: '', memberId: '' });
-      setShowForm(false);
+      try {
+        await api.post('/issues/issue', null, {
+          params: { bookId: newIssue.bookId, memberId: newIssue.memberId },
+        });
+        setMessage('Book issued successfully');
+        setNewIssue({ bookId: '', memberId: '' });
+        setShowForm(false);
+        loadData();
+      } catch (error) {
+        setMessage(error?.response?.data?.error || 'Unable to issue book');
+      }
+    }
+  };
+
+  const handleReturn = async (issueId) => {
+    try {
+      await api.put(`/issues/return/${issueId}`);
+      setMessage('Book returned successfully');
+      loadData();
+    } catch (error) {
+      setMessage(error?.response?.data?.error || 'Unable to return book');
     }
   };
 
   return (
     <div className="page-container">
       <div className="page-header-top">
-        <h1>Issue Books</h1>
+        <div>
+          <h1>Issue Books</h1>
+          <p className="page-helper">Assign a single available book to one member at a time. Each member can have up to three active issues.</p>
+        </div>
         <button className="btn-add" onClick={() => setShowForm(!showForm)}>
           {showForm ? 'Cancel' : 'Issue Book'}
         </button>
       </div>
+
+      {message && <div className="status-banner">{message}</div>}
 
       {showForm && (
         <div className="form-card">
@@ -44,8 +86,11 @@ function IssueBooks() {
                 required
               >
                 <option value="">Select...</option>
-                <option value="1">The Great Gatsby</option>
-                <option value="2">To Kill a Mockingbird</option>
+                {books.map((book) => (
+                  <option key={book.bookId} value={book.bookId}>
+                    {book.title} - {book.author}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="form-group">
@@ -56,8 +101,11 @@ function IssueBooks() {
                 required
               >
                 <option value="">Select...</option>
-                <option value="1">John Doe</option>
-                <option value="2">Jane Smith</option>
+                {members.map((member) => (
+                  <option key={member.memberId} value={member.memberId}>
+                    {member.name} ({member.email})
+                  </option>
+                ))}
               </select>
             </div>
             <button type="submit" className="btn-primary">Issue</button>
@@ -77,16 +125,18 @@ function IssueBooks() {
             </tr>
           </thead>
           <tbody>
-            {issues.length > 0 ? (
+            {!loading && issues.length > 0 ? (
               issues.map((issue) => (
-                <tr key={issue.id}>
-                  <td>#{issue.id}</td>
-                  <td>{issue.bookTitle}</td>
-                  <td>{issue.memberName}</td>
+                <tr key={issue.issueId}>
+                  <td>#{issue.issueId}</td>
+                  <td>{issue.book?.title}</td>
+                  <td>{issue.member?.name}</td>
                   <td>{issue.issueDate}</td>
-                  <td>{issue.dueDate}</td>
+                  <td>{issue.returnDate || 'Active'}</td>
                 </tr>
               ))
+            ) : loading ? (
+              <tr><td colSpan="5" className="no-data">Loading issues...</td></tr>
             ) : (
               <tr><td colSpan="5" className="no-data">No issues found</td></tr>
             )}

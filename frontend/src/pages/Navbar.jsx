@@ -4,13 +4,21 @@ import '../styles/Navbar.css';
 function Navbar({ currentUser, onLogout, activePage, setActivePage }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const menuItems = [
-    { id: 'dashboard', label: 'Dashboard' },
-    { id: 'books', label: 'Books' },
-    { id: 'members', label: 'Members' },
-    { id: 'issue', label: 'Issue Books' },
-    { id: 'return', label: 'Return Books' },
-  ];
+  const isLibrarian = currentUser?.role === 'LIBRARIAN';
+
+  const menuItems = isLibrarian
+    ? [
+        { id: 'dashboard', label: 'Dashboard' },
+        { id: 'books', label: 'Books' },
+        { id: 'members', label: 'Members' },
+        { id: 'issue', label: 'Issue Books' },
+        { id: 'return', label: 'Return Books' },
+      ]
+    : [
+        { id: 'dashboard', label: 'Dashboard' },
+        { id: 'books', label: 'Browse Books' },
+        { id: 'return', label: 'My Issues' },
+      ];
 
   return (
     <nav className="navbar">
@@ -45,6 +53,7 @@ function Navbar({ currentUser, onLogout, activePage, setActivePage }) {
         </ul>
 
         <div className="navbar-right">
+          <span className="user-role">{currentUser?.role || 'MEMBER'}</span>
           <span className="user-name">{currentUser?.name || currentUser?.email}</span>
           <button className="btn-logout" onClick={onLogout}>
             Logout

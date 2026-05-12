@@ -1,9 +1,11 @@
 .navbar {
-  background-color: white;
-  border-bottom: 1px solid #e5e7eb;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   position: sticky;
   top: 0;
   z-index: 100;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.16);
 }
 
 .navbar-container {
@@ -13,13 +15,16 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 60px;
+  min-height: 72px;
+  gap: 18px;
 }
 
 .navbar-logo {
   font-size: 18px;
-  font-weight: 700;
-  color: #1f2937;
+  font-weight: 800;
+  color: #f8fafc;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .hamburger {
@@ -34,7 +39,7 @@
 .hamburger span {
   width: 20px;
   height: 2px;
-  background-color: #1f2937;
+  background-color: #f8fafc;
 }
 
 @media (max-width: 768px) {
@@ -46,18 +51,18 @@
 .navbar-menu {
   display: flex;
   list-style: none;
-  gap: 0;
+  gap: 8px;
 }
 
 @media (max-width: 768px) {
   .navbar-menu {
     position: absolute;
-    top: 60px;
+    top: 72px;
     left: 0;
     right: 0;
     flex-direction: column;
-    background-color: white;
-    border-bottom: 1px solid #e5e7eb;
+    background: rgba(15, 23, 42, 0.96);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.3s;
@@ -73,16 +78,17 @@
 }
 
 .nav-link {
-  background: none;
-  border: none;
-  padding: 0 16px;
-  height: 60px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #6b7280;
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 12px 15px;
+  min-height: 44px;
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(248, 250, 252, 0.78);
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
+  border-radius: 999px;
 }
 
 @media (max-width: 768px) {
@@ -93,13 +99,14 @@
 }
 
 .nav-link:hover {
-  color: #1f2937;
-  background-color: #f9fafb;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .nav-link.active {
-  color: #3b82f6;
-  border-bottom: 2px solid #3b82f6;
+  color: #ffffff;
+  background: linear-gradient(135deg, rgba(251, 146, 60, 0.22), rgba(59, 130, 246, 0.22));
+  border-color: rgba(255, 255, 255, 0.16);
 }
 
 @media (max-width: 768px) {
@@ -112,28 +119,40 @@
 .navbar-right {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-left: 20px;
+  gap: 12px;
+  margin-left: 10px;
 }
 
 @media (max-width: 768px) {
   .navbar-right {
     position: absolute;
-    top: 60px;
+    top: 72px;
     right: 0;
     left: 0;
     flex-direction: column;
     gap: 8px;
-    background-color: #f9fafb;
-    border-bottom: 1px solid #e5e7eb;
+    background: rgba(15, 23, 42, 0.96);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     padding: 12px 20px;
   }
 }
 
+.user-role {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #fed7aa;
+  background: rgba(251, 146, 60, 0.1);
+  border: 1px solid rgba(251, 146, 60, 0.24);
+  border-radius: 999px;
+  padding: 7px 10px;
+}
+
 .user-name {
   font-size: 14px;
-  color: #4b5563;
-  font-weight: 500;
+  color: #e2e8f0;
+  font-weight: 600;
 }
 
 @media (max-width: 480px) {
@@ -143,20 +162,20 @@
 }
 
 .btn-logout {
-  padding: 8px 14px;
-  background-color: white;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
   font-size: 13px;
-  font-weight: 500;
-  color: #4b5563;
+  font-weight: 700;
+  color: #f8fafc;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .btn-logout:hover {
-  background-color: #f3f4f6;
-  border-color: #9ca3af;
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.18);
 }
 
 @media (max-width: 768px) {

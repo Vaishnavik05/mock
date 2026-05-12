@@ -1,12 +1,6 @@
 package com.library.library_management.controller;
 
-import com.library.library_management.entity.Member;
-import com.library.library_management.entity.IssueRecord;
-import com.library.library_management.service.MemberService;
-import com.library.library_management.service.IssueService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
-import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +21,7 @@ import com.library.library_management.service.MemberService;
 
 @RestController
 @RequestMapping("/members")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:3001", "http://localhost:3002"})
 public class MemberController {
 
     @Autowired
