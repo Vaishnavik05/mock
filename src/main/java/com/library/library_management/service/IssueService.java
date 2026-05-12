@@ -1,17 +1,20 @@
 package com.library.library_management.service;
 
-import com.library.library_management.entity.Book;
-import com.library.library_management.entity.IssueRecord;
-import com.library.library_management.entity.Member;
-import com.library.library_management.repository.BookRepository;
-import com.library.library_management.repository.IssueRepository;
-import com.library.library_management.repository.MemberRepository;
+import java.time.LocalDate;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.util.List;
+import com.library.library_management.entity.Book;
+import com.library.library_management.entity.IssueRecord;
+import com.library.library_management.entity.Member;
+import com.library.library_management.exception.BookNotAvailableException;
+import com.library.library_management.exception.LimitExceededException;
+import com.library.library_management.exception.ResourceNotFoundException;
+import com.library.library_management.repository.BookRepository;
+import com.library.library_management.repository.IssueRepository;
+import com.library.library_management.repository.MemberRepository;
 
 @Service
 public class IssueService {
@@ -30,32 +33,27 @@ public class IssueService {
     }
 
     public List<IssueRecord> getIssuesByMember(Long memberId) {
-        Member member = memberRepository.findById(memberId).orElse(null);
-
-        if (member == null) {
-            return null;
-        }
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new ResourceNotFoundException("Member not found with id " + memberId));
 
         return issueRepository.findByMemberAndReturnDateIsNull(member);
     }
 
     public IssueRecord issueBook(Long bookId, Long memberId) {
 
-        Book book = bookRepository.findById(bookId).orElse(null);
-        Member member = memberRepository.findById(memberId).orElse(null);
-
-        if (book == null || member == null) {
-            return null;
-        }
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new ResourceNotFoundException("Book not found with id " + bookId));
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new ResourceNotFoundException("Member not found with id " + memberId));
 
         if (!book.getAvailability()) {
-            return null;
+            throw new BookNotAvailableException("Book is currently unavailable");
         }
 
         long count = issueRepository.countByMemberAndReturnDateIsNull(member);
 
         if (count >= 3) {
-            return null;
+            throw new LimitExceededException("Member has reached the maximum issue limit");
         }
 
         book.setAvailability(false);
@@ -72,10 +70,11 @@ public class IssueService {
 
     public IssueRecord returnBook(Long issueId) {
 
-        IssueRecord issueRecord = issueRepository.findById(issueId).orElse(null);
+        IssueRecord issueRecord = issueRepository.findById(issueId)
+                .orElseThrow(() -> new ResourceNotFoundException("Issue not found with id " + issueId));
 
-        if (issueRecord == null) {
-            return null;
+        if (issueRecord.getReturnDate() != null) {
+            return issueRecord;
         }
 
         issueRecord.setReturnDate(LocalDate.now());

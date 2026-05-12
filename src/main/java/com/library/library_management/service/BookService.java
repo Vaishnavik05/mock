@@ -1,11 +1,13 @@
 package com.library.library_management.service;
 
-import com.library.library_management.entity.Book;
-import com.library.library_management.repository.BookRepository;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import com.library.library_management.entity.Book;
+import com.library.library_management.exception.ResourceNotFoundException;
+import com.library.library_management.repository.BookRepository;
 
 @Service
 public class BookService {
@@ -16,6 +18,33 @@ public class BookService {
 
     public Book addBook(Book book) {
         return bookRepository.save(book);
+    }
+
+    public Book updateBook(Long id, Book bookDetails) {
+        Book book = bookRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Book not found with id " + id));
+
+        book.setTitle(bookDetails.getTitle());
+        book.setAuthor(bookDetails.getAuthor());
+
+        if (bookDetails.getAvailability() != null) {
+            book.setAvailability(bookDetails.getAvailability());
+        }
+
+        return bookRepository.save(book);
+    }
+
+    public void deleteBook(Long id) {
+        if (!bookRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Book not found with id " + id);
+        }
+
+        bookRepository.deleteById(id);
+    }
+
+    public Book getBookById(Long id) {
+        return bookRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Book not found with id " + id));
     }
 
     public List<Book> getAllBooks() {

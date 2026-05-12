@@ -1,5 +1,6 @@
 package com.library.library_management.controller;
 
+<<<<<<< HEAD
 import com.library.library_management.entity.Member;
 import com.library.library_management.entity.IssueRecord;
 import com.library.library_management.service.MemberService;
@@ -7,7 +8,25 @@ import com.library.library_management.service.IssueService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+=======
+>>>>>>> ce8e76e6dfd568b3a344b67114ebb38b7e0ca571
 import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.library.library_management.entity.IssueRecord;
+import com.library.library_management.entity.Member;
+import com.library.library_management.service.IssueService;
+import com.library.library_management.service.MemberService;
 
 @RestController
 @RequestMapping("/members")
@@ -30,6 +49,16 @@ public class MemberController {
         }
         Member created = memberService.registerMember(member);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @PutMapping("/{id}")
+    public Member updateMember(@PathVariable Long id, @RequestBody Member member) {
+        return memberService.updateMember(id, member);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteMember(@PathVariable Long id) {
+        memberService.deleteMember(id);
     }
 
     @GetMapping
