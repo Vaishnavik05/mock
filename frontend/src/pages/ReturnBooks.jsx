@@ -1,27 +1,41 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import api from '../services/api';
 import '../styles/Pages.css';
 
 function ReturnBooks() {
-  const [returns, setReturns] = useState([
-    { id: 1, issueId: 1, bookTitle: 'The Great Gatsby', memberName: 'John Doe', returnDate: '2024-05-25', fine: 0 },
-  ]);
+  const [activeIssues, setActiveIssues] = useState([]);
+  const [returnedIssues, setReturnedIssues] = useState([]);
 
   const [showForm, setShowForm] = useState(false);
   const [issueId, setIssueId] = useState('');
+  const [error, setError] = useState('');
 
-  const handleReturnBook = (e) => {
+  useEffect(() => {
+    loadIssues();
+  }, []);
+
+  const loadIssues = async () => {
+    try {
+      const response = await api.get('/issues');
+      const allIssues = response.data;
+      setActiveIssues(allIssues.filter((issue) => !issue.returnDate));
+      setReturnedIssues(allIssues.filter((issue) => issue.returnDate));
+      setError('');
+    } catch (err) {
+      setError('Failed to load issue records');
+    }
+  };
+
+  const handleReturnBook = async (e) => {
     e.preventDefault();
-    if (issueId) {
-      setReturns([...returns, {
-        id: Math.max(...returns.map(r => r.id), 0) + 1,
-        issueId: parseInt(issueId),
-        bookTitle: 'Returned Book',
-        memberName: 'Member',
-        returnDate: new Date().toISOString().split('T')[0],
-        fine: 0,
-      }]);
+
+    try {
+      await api.put(`/issues/return/${issueId}`);
       setIssueId('');
       setShowForm(false);
+      await loadIssues();
+    } catch (err) {
+      setError(err.response?.data?.error || err.response?.data?.message || err.response?.data?.detail || 'Failed to return book');
     }
   };
 
@@ -33,6 +47,8 @@ function ReturnBooks() {
           {showForm ? 'Cancel' : 'Return Book'}
         </button>
       </div>
+
+      {error && <div className="error-box">{error}</div>}
 
       {showForm && (
         <div className="form-card">
@@ -52,28 +68,55 @@ function ReturnBooks() {
         </div>
       )}
 
+      <div className="table-wrapper" style={{ marginBottom: '24px' }}>
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Issue ID</th>
+              <th>Book</th>
+              <th>Member</th>
+              <th>Issue Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {activeIssues.length > 0 ? (
+              activeIssues.map((issue) => (
+                <tr key={issue.issueId}>
+                  <td>#{issue.issueId}</td>
+                  <td>{issue.book.title}</td>
+                  <td>{issue.member.name}</td>
+                  <td>{issue.issueDate}</td>
+                </tr>
+              ))
+            ) : (
+              <tr><td colSpan="4" className="no-data">No active issues found</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
       <div className="table-wrapper">
         <table className="data-table">
           <thead>
             <tr>
-              <th>Return ID</th>
               <th>Issue ID</th>
               <th>Book</th>
               <th>Member</th>
+              <th>Issue Date</th>
               <th>Return Date</th>
-              <th>Fine</th>
+              <th>Status</th>
             </tr>
           </thead>
           <tbody>
-            {returns.length > 0 ? (
-              returns.map((ret) => (
-                <tr key={ret.id}>
-                  <td>#{ret.id}</td>
-                  <td>#{ret.issueId}</td>
-                  <td>{ret.bookTitle}</td>
-                  <td>{ret.memberName}</td>
-                  <td>{ret.returnDate}</td>
-                  <td className={ret.fine > 0 ? 'fine' : ''}>₹{ret.fine}</td>
+            {returnedIssues.length > 0 ? (
+              returnedIssues.map((issue) => (
+                <tr key={issue.issueId}>
+                  <td>#{issue.issueId}</td>
+                  <td>{issue.book.title}</td>
+                  <td>{issue.member.name}</td>
+                  <td>{issue.issueDate}</td>
+                  <td>{issue.returnDate}</td>
+                  <td>Returned</td>
                 </tr>
               ))
             ) : (

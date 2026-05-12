@@ -5,11 +5,13 @@ import "./AddMember.css";
 function AddMember() {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
+    const [phone, setPhone] = useState("");
 
     const save = async () => {
         await api.post("/members", {
             name,
-            email
+            email,
+            phone
         });
 
         alert("Member Added");
@@ -29,6 +31,12 @@ function AddMember() {
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+            />
+
+            <input
+                placeholder="Phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
             />
 
             <button onClick={save}>

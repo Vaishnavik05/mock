@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import api from '../services/api';
 import '../styles/Auth.css';
 
 function Login({ onLoginSuccess, onToggleSignup }) {
@@ -19,22 +20,10 @@ function Login({ onLoginSuccess, onToggleSignup }) {
     }
 
     try {
-      const response = await fetch('http://localhost:8080/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        onLoginSuccess(data.user || { email, id: data.id });
-      } else {
-        setError('Invalid email or password');
-      }
+      const response = await api.post('/api/auth/login', { email, password });
+      onLoginSuccess(response.data);
     } catch (err) {
-      onLoginSuccess({ email, name: email.split('@')[0], id: Date.now() });
+      setError(err.response?.data?.error || err.response?.data?.message || err.response?.data?.detail || 'Invalid email or password');
     }
     setLoading(false);
   };

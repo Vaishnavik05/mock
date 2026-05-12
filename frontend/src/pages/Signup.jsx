@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import api from '../services/api';
 import '../styles/Auth.css';
 
 function Signup({ onSignupSuccess, onToggleMode }) {
@@ -45,27 +46,16 @@ function Signup({ onSignupSuccess, onToggleMode }) {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8080/api/auth/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-          phone: formData.phone,
-        }),
+      const response = await api.post('/api/auth/signup', {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        phone: formData.phone,
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        onSignupSuccess(data.user || { name: formData.name, email: formData.email });
-      } else {
-        setError('Signup failed');
-      }
+      onSignupSuccess(response.data);
     } catch (err) {
-      onSignupSuccess({ name: formData.name, email: formData.email, id: Date.now() });
+      setError(err.response?.data?.error || err.response?.data?.message || err.response?.data?.detail || 'Signup failed');
     }
     setLoading(false);
   };

@@ -1,26 +1,53 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import api from '../services/api';
 import '../styles/Pages.css';
 
 function IssueBooks() {
-  const [issues, setIssues] = useState([
-    { id: 1, bookTitle: 'The Great Gatsby', memberName: 'John Doe', issueDate: '2024-05-01', dueDate: '2024-06-01' },
-  ]);
+  const [issues, setIssues] = useState([]);
+  const [books, setBooks] = useState([]);
+  const [members, setMembers] = useState([]);
 
   const [showForm, setShowForm] = useState(false);
   const [newIssue, setNewIssue] = useState({ bookId: '', memberId: '' });
+  const [error, setError] = useState('');
 
-  const handleIssueBook = (e) => {
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      const [issuesResponse, booksResponse, membersResponse] = await Promise.all([
+        api.get('/issues'),
+        api.get('/books'),
+        api.get('/members'),
+      ]);
+
+      setIssues(issuesResponse.data);
+      setBooks(booksResponse.data.filter((book) => book.availability));
+      setMembers(membersResponse.data);
+      setError('');
+    } catch (err) {
+      setError('Failed to load issue data');
+    }
+  };
+
+  const handleIssueBook = async (e) => {
     e.preventDefault();
-    if (newIssue.bookId && newIssue.memberId) {
-      setIssues([...issues, {
-        id: Math.max(...issues.map(i => i.id), 0) + 1,
-        bookTitle: 'Selected Book',
-        memberName: 'Selected Member',
-        issueDate: new Date().toISOString().split('T')[0],
-        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      }]);
+
+    try {
+      await api.post('/issues/issue', null, {
+        params: {
+          bookId: newIssue.bookId,
+          memberId: newIssue.memberId,
+        },
+      });
+
       setNewIssue({ bookId: '', memberId: '' });
       setShowForm(false);
+      await loadData();
+    } catch (err) {
+      setError(err.response?.data?.error || err.response?.data?.message || err.response?.data?.detail || 'Failed to issue book');
     }
   };
 
@@ -33,6 +60,8 @@ function IssueBooks() {
         </button>
       </div>
 
+      {error && <div className="error-box">{error}</div>}
+
       {showForm && (
         <div className="form-card">
           <form onSubmit={handleIssueBook}>
@@ -44,8 +73,11 @@ function IssueBooks() {
                 required
               >
                 <option value="">Select...</option>
-                <option value="1">The Great Gatsby</option>
-                <option value="2">To Kill a Mockingbird</option>
+                {books.map((book) => (
+                  <option key={book.bookId} value={book.bookId}>
+                    {book.title}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="form-group">
@@ -56,8 +88,11 @@ function IssueBooks() {
                 required
               >
                 <option value="">Select...</option>
-                <option value="1">John Doe</option>
-                <option value="2">Jane Smith</option>
+                {members.map((member) => (
+                  <option key={member.memberId} value={member.memberId}>
+                    {member.name}
+                  </option>
+                ))}
               </select>
             </div>
             <button type="submit" className="btn-primary">Issue</button>
@@ -73,18 +108,18 @@ function IssueBooks() {
               <th>Book</th>
               <th>Member</th>
               <th>Issue Date</th>
-              <th>Due Date</th>
+              <th>Status</th>
             </tr>
           </thead>
           <tbody>
             {issues.length > 0 ? (
               issues.map((issue) => (
-                <tr key={issue.id}>
-                  <td>#{issue.id}</td>
-                  <td>{issue.bookTitle}</td>
-                  <td>{issue.memberName}</td>
+                <tr key={issue.issueId}>
+                  <td>#{issue.issueId}</td>
+                  <td>{issue.book.title}</td>
+                  <td>{issue.member.name}</td>
                   <td>{issue.issueDate}</td>
-                  <td>{issue.dueDate}</td>
+                  <td>{issue.returnDate ? 'Returned' : 'Issued'}</td>
                 </tr>
               ))
             ) : (

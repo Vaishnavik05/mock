@@ -1,28 +1,69 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import api from '../services/api';
 import '../styles/Pages.css';
 
 function Books() {
-  const [books, setBooks] = useState([
-    { id: 1, title: 'The Great Gatsby', author: 'F. Scott Fitzgerald', available: true },
-    { id: 2, title: 'To Kill a Mockingbird', author: 'Harper Lee', available: true },
-    { id: 3, title: '1984', author: 'George Orwell', available: false },
-  ]);
+  const [books, setBooks] = useState([]);
 
   const [showForm, setShowForm] = useState(false);
-  const [newBook, setNewBook] = useState({ title: '', author: '' });
+  const [newBook, setNewBook] = useState({ title: '', author: '', availability: true });
   const [searchTerm, setSearchTerm] = useState('');
+  const [editingBookId, setEditingBookId] = useState(null);
+  const [error, setError] = useState('');
 
-  const handleAddBook = (e) => {
+  useEffect(() => {
+    loadBooks();
+  }, []);
+
+  const loadBooks = async () => {
+    try {
+      const response = await api.get('/books');
+      setBooks(response.data);
+      setError('');
+    } catch (err) {
+      setError('Failed to load books');
+    }
+  };
+
+  const handleAddBook = async (e) => {
     e.preventDefault();
-    if (newBook.title && newBook.author) {
-      setBooks([...books, {
-        id: Math.max(...books.map(b => b.id), 0) + 1,
-        title: newBook.title,
-        author: newBook.author,
-        available: true,
-      }]);
+
+    try {
+      if (editingBookId) {
+        await api.put(`/books/${editingBookId}`, newBook);
+      } else {
+        await api.post('/books', {
+          title: newBook.title,
+          author: newBook.author,
+          availability: true,
+        });
+      }
+
       setNewBook({ title: '', author: '' });
+      setEditingBookId(null);
       setShowForm(false);
+      await loadBooks();
+    } catch (err) {
+      setError(err.response?.data?.error || err.response?.data?.message || err.response?.data?.detail || 'Failed to save book');
+    }
+  };
+
+  const handleEditBook = (book) => {
+    setEditingBookId(book.bookId);
+    setNewBook({
+      title: book.title,
+      author: book.author,
+      availability: book.availability,
+    });
+    setShowForm(true);
+  };
+
+  const handleDeleteBook = async (bookId) => {
+    try {
+      await api.delete(`/books/${bookId}`);
+      await loadBooks();
+    } catch (err) {
+      setError(err.response?.data?.error || err.response?.data?.message || err.response?.data?.detail || 'Failed to delete book');
     }
   };
 
@@ -35,10 +76,19 @@ function Books() {
     <div className="page-container">
       <div className="page-header-top">
         <h1>Books</h1>
-        <button className="btn-add" onClick={() => setShowForm(!showForm)}>
+        <button
+          className="btn-add"
+          onClick={() => {
+            setShowForm(!showForm);
+            setEditingBookId(null);
+            setNewBook({ title: '', author: '', availability: true });
+          }}
+        >
           {showForm ? 'Cancel' : 'Add Book'}
         </button>
       </div>
+
+      {error && <div className="error-box">{error}</div>}
 
       {showForm && (
         <div className="form-card">
@@ -63,7 +113,7 @@ function Books() {
                 required
               />
             </div>
-            <button type="submit" className="btn-primary">Add</button>
+            <button type="submit" className="btn-primary">{editingBookId ? 'Update' : 'Add'}</button>
           </form>
         </div>
       )}
@@ -91,14 +141,14 @@ function Books() {
           <tbody>
             {filteredBooks.length > 0 ? (
               filteredBooks.map((book) => (
-                <tr key={book.id}>
-                  <td>#{book.id}</td>
+                <tr key={book.bookId}>
+                  <td>#{book.bookId}</td>
                   <td>{book.title}</td>
                   <td>{book.author}</td>
-                  <td><span className={`badge ${book.available ? 'available' : 'unavailable'}`}>{book.available ? 'Available' : 'Issued'}</span></td>
+                  <td><span className={`badge ${book.availability ? 'available' : 'unavailable'}`}>{book.availability ? 'Available' : 'Issued'}</span></td>
                   <td className="actions">
-                    <button className="btn-action">Edit</button>
-                    <button className="btn-action delete">Delete</button>
+                    <button className="btn-action" onClick={() => handleEditBook(book)}>Edit</button>
+                    <button className="btn-action delete" onClick={() => handleDeleteBook(book.bookId)}>Delete</button>
                   </td>
                 </tr>
               ))
