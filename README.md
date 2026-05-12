@@ -22,10 +22,13 @@ src/
 │   ├── java/com/library/library_management/
 │   │   ├── LibraryManagementApplication.java
 │   │   ├── controller/
+│   │   │   ├── AuthController.java
 │   │   │   ├── BookController.java
 │   │   │   ├── IssueController.java
 │   │   │   └── MemberController.java
 │   │   ├── dto/
+│   │   │   ├── AuthRequest.java
+│   │   │   ├── AuthResponse.java
 │   │   │   └── IssueRequest.java
 │   │   ├── entity/
 │   │   │   ├── Book.java
@@ -41,6 +44,7 @@ src/
 │   │   │   ├── IssueRepository.java
 │   │   │   └── MemberRepository.java
 │   │   └── service/
+│   │       ├── AuthService.java
 │   │       ├── BookService.java
 │   │       ├── IssueService.java
 │   │       └── MemberService.java
@@ -275,14 +279,12 @@ curl http://localhost:8080/issues
 
 ## Future Enhancements
 
-- Authentication and authorization (JWT)
 - Book reservation system
 - Fine calculation for overdue books
 - Email notifications
 - API documentation with Swagger/OpenAPI
 - Unit and integration tests
 - Pagination for large datasets
-- Admin dashboard
 
 ## Troubleshooting
 
