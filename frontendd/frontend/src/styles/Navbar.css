@@ -1,0 +1,166 @@
+.navbar {
+  background-color: white;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.navbar-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 60px;
+}
+
+.navbar-logo {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.hamburger {
+  display: none;
+  flex-direction: column;
+  background: none;
+  border: none;
+  cursor: pointer;
+  gap: 4px;
+}
+
+.hamburger span {
+  width: 20px;
+  height: 2px;
+  background-color: #1f2937;
+}
+
+@media (max-width: 768px) {
+  .hamburger {
+    display: flex;
+  }
+}
+
+.navbar-menu {
+  display: flex;
+  list-style: none;
+  gap: 0;
+}
+
+@media (max-width: 768px) {
+  .navbar-menu {
+    position: absolute;
+    top: 60px;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    background-color: white;
+    border-bottom: 1px solid #e5e7eb;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s;
+  }
+
+  .navbar-menu.active {
+    max-height: 300px;
+  }
+
+  .navbar-menu li {
+    border-bottom: 1px solid #f3f4f6;
+  }
+}
+
+.nav-link {
+  background: none;
+  border: none;
+  padding: 0 16px;
+  height: 60px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .nav-link {
+    padding: 12px 20px;
+    height: auto;
+  }
+}
+
+.nav-link:hover {
+  color: #1f2937;
+  background-color: #f9fafb;
+}
+
+.nav-link.active {
+  color: #3b82f6;
+  border-bottom: 2px solid #3b82f6;
+}
+
+@media (max-width: 768px) {
+  .nav-link.active {
+    border-bottom: none;
+    background-color: #eff6ff;
+  }
+}
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: 20px;
+}
+
+@media (max-width: 768px) {
+  .navbar-right {
+    position: absolute;
+    top: 60px;
+    right: 0;
+    left: 0;
+    flex-direction: column;
+    gap: 8px;
+    background-color: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 12px 20px;
+  }
+}
+
+.user-name {
+  font-size: 14px;
+  color: #4b5563;
+  font-weight: 500;
+}
+
+@media (max-width: 480px) {
+  .user-name {
+    display: none;
+  }
+}
+
+.btn-logout {
+  padding: 8px 14px;
+  background-color: white;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #4b5563;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-logout:hover {
+  background-color: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+@media (max-width: 768px) {
+  .btn-logout {
+    width: 100%;
+  }
+}
